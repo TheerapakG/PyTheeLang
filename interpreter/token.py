@@ -75,8 +75,8 @@ RESERVED_KEYWORDS = {
     'implement': Token('implement', 'implement'),
     'take': Token('take', 'take'),
     'as': Token('as', 'as'),
+    'args': Token('args', 'args'),
     'capture': Token('capture', 'capture'),
-    'template': Token('template', 'template'),
     'raise': Token('raise', 'raise'),
     'catch': Token('catch', 'catch'),
     'ref': Token('ref', 'ref'),
@@ -90,4 +90,5 @@ RESERVED_KEYWORDS = {
     'do': Token('do', 'do'),
     'continue': Token('continue', 'continue'),
     'break': Token('break', 'break'),
+    'pass': Token('pass', 'pass'),
 }

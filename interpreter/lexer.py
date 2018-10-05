@@ -504,13 +504,3 @@ class Lexer:
             self.error()
 
         return Token(TokenType.EOF, None)
-
-    def eat(self, token_type):
-        # compare the current token type with the passed token
-        # type and if they match then "eat" the current token
-        # and assign the next token to the self.current_token,
-        # otherwise raise an exception.
-        if self.current_token.lexeme == token_type:
-            self.current_token = self.get_next_token()
-        else:
-            self.error()
