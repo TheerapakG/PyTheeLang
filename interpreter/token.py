@@ -91,4 +91,5 @@ RESERVED_KEYWORDS = {
     'continue': Token('continue', 'continue'),
     'break': Token('break', 'break'),
     'pass': Token('pass', 'pass'),
+    'in': Token('in', 'in'),
 }

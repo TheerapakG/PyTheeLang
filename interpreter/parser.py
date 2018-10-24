@@ -104,7 +104,8 @@ class Parser:
 
     def block(self, indent_not_less_than = 0):
         """
-        block: mostly in form of <[INDENT]<statement>...> but also some whitspaces shit and comment shit before each statement
+        block: mostly in form of <[INDENT]<statement>...> but also some whitspaces shit and comment shit before each line
+        so it's more like <[[INDENT][MULTI_COMMENT][COMMENT]<END_STATEMENT>...][INDENT]<statement>...>[EOF]
         """
         indent = 0
         statements = list()
@@ -116,13 +117,17 @@ class Parser:
             self.error()  # expected indent
         while (True):
             if indent != 0:
-                if self.current_token.lexeme != indent:
+                if self.current_token.lexeme == TokenType.EOF:
+                    return Block(statements)  # just end program
+                if self.current_token.lexeme != TokenType.INDENT:
                     self.error()  # expected indent
                 if self.current_token.value < indent:
                     return Block(statements)
                 if self.current_token.value > indent:
                     self.error()  # unexpected indent
                 self.eat(TokenType.INDENT)
+            if self.current_token.lexeme == TokenType.EOF:
+                return Block(statements)  # just end program
             statements.append(self.statement(indent))
             while ((self.current_token == TokenType.INDENT or self.current_token == TokenType.END_STATEMENT) and (self.next_token == TokenType.INDENT or self.next_token == TokenType.END_STATEMENT)) or self.current_token == TokenType.COMMENT or self.current_token == TokenType.MULTI_COMMENT:
                 self.eat(self.current_token.lexeme)
@@ -133,9 +138,91 @@ class Parser:
         """
         block have already removed "whitspaces shit and comment shit" out
 
-        statement: <expression><END_STATEMENT>
+        statement: <ifblock><[EOF]|[END_STATEMENT]>
+                   <forblock><[EOF]|[END_STATEMENT]>
+                   <whileblock><[EOF]|[END_STATEMENT]>
+                   <dowhileblock><[EOF]|[END_STATEMENT]>
+                   <declaration><[EOF]|[END_STATEMENT]>
+                   <raise><[EOF]|[END_STATEMENT]>
+                   <funccall><[EOF]|[END_STATEMENT]>
+                   <assign_expr><[EOF]|[END_STATEMENT]>
         """
-        pass
+        if self.current_token.lexeme == 'if':
+            statement = self.ifblock(curr_indent_level)
+        elif self.current_token.lexeme == 'for':
+            statement = self.forblock(curr_indent_level)
+        elif self.current_token.lexeme == 'while':
+            statement = self.whileblock(curr_indent_level)
+        elif self.current_token.lexeme == 'do':
+            statement = self.dowhileblock(curr_indent_level)
+        elif self.current_token.lexeme == 'enforce':
+            statement = self.declaration(curr_indent_level)
+        elif self.current_token.lexeme == 'raise':
+            statement = self.raiseexcept(curr_indent_level)
+        elif self.current_token.lexeme == 'identifier' and self.next_token.lexeme == TokenType.PAREN_O:
+            statement = self.funccall(curr_indent_level)
+        else:
+            statement = self.assign_expr(curr_indent_level)
+
+        if self.current_token.lexeme == TokenType.EOF:
+            self.eat(TokenType.EOF)
+        elif self.current_token.lexeme == TokenType.END_STATEMENT:
+            self.eat(TokenType.END_STATEMENT)
+        else:
+            self.error()
+        return statement
+
+    def expression(self):
+        """
+        expression: <Var>[<operation><expression>]
+        """
+        
+    
+    def ifblock(self, curr_indent_level):
+        """
+        ifblock: <if><non-assign expression bool><<END_STATEMENT><block>|<statement>>
+        """
+        return 0
+
+    def forblock(self, curr_indent_level):
+        """
+        forblock: <for><expression><SEPARATOR><non-assign expression bool><SEPARATOR><expression><<END_STATEMENT><block>|<statement>>
+                  <for><Var><in><expression><<END_STATEMENT><block>|<statement>>
+        """
+        return 0
+
+    def whileblock(self, curr_indent_level):
+        """
+        whileblock: <while><non-assign expression bool><<END_STATEMENT><block>|<statement>>
+        """
+        return 0
+
+    def dowhileblock(self, curr_indent_level):
+        """
+        expression: <do><<END_STATEMENT><block>|<statement>><while><non-assign expression bool>
+        """
+        return 0
+
+    def declaration(self, curr_indent_level):
+        """
+        declaration: <enforce><identifier><as><non-assign non-instace expr>
+
+        make later lookup for identifier an instance
+        """
+        return 0
+
+    def raiseexcept(self, curr_indent_level):
+        """
+        raiseexcept: <raise><non-assign instance expr>
+        """
+        return 0
+
+    def funccall(self, curr_indent_level):
+        """
+        funccall: <identifier><PAREN_O>[<non-assign instance expr>...]<PAREN_E>[<in><non-assign expr>]
+        """
+        return 0
+
 
     def parse(self):
         node = self.block()
@@ -152,5 +239,11 @@ class Parser:
         if self.current_token.lexeme == token_type:
             self.current_token = self.next_token
             self.next_token = self.lexer.get_next_token()
+            if self.current_token.lexeme == TokenType.CONTINUE_PARSE:
+                self.eat(TokenType.CONTINUE_PARSE)
+                if self.current_token.lexeme == TokenType.END_STATEMENT:
+                    self.eat(TokenType.END_STATEMENT)
+                if self.current_token.lexeme == TokenType.INDENT:
+                    self.eat(TokenType.INDENT)
         else:
             self.error()
